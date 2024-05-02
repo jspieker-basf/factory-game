@@ -30,8 +30,8 @@ clock = pygame.time.Clock()
 
 # Main loop 
 
-xpos = 0
-ypos = 0
+xpos = random.randint(0, int(size[0]/2))
+ypos = random.randint(0, int(size[1]/2))
 ydir = 1
 xdir = 1
 increment = 5
