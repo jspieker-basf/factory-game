@@ -8,7 +8,7 @@ class World:
         self.player = None
         self.relative_position = (0, 0)
         self.screen_center = (surface.get_width()//2, surface.get_height()//2)
-        self.zoom_level = 1 # 1 = 100% zoom, 20 = 5% zoom
+        self.zoom_level = 3 # 1 = 100% zoom, 20 = 5% zoom
         self.tile_size = surface.get_width() // self.zoom_level
 
     def add_entity(self, entity):

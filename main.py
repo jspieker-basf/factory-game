@@ -1,21 +1,21 @@
 import pygame as pg
 from entities import *
 from world import World
-import pygame.examples.aliens
 import math
 # Initialize Pygame
 pg.init()
 
 # Set up the game window
-window_width = 1920
-window_height = 1080
+window_width = 960
+window_height = 540
 window = pg.display.set_mode((window_width, window_height))
 pg.display.set_caption("Factory Game")
 # setup world
 world = World("Nauvis", window)
 eng = Engineer((0,0))
-for x in range(-2,2):
-    for y in range(-2, 2):
+tiles = []
+for x in range(0,2):
+    for y in range(0, 2):
         world.add_entity(Tile((x,y)))
 
 world.add_entity(eng)
@@ -32,11 +32,12 @@ while running:
     for event in pg.event.get():
         if event.type == pg.QUIT:
             running = False
-        if event.type == pygame.MOUSEWHEEL:
+        if event.type == pg.MOUSEWHEEL:
             # eng.walkingspeed += event.y
             world.zoom(-event.y)
-        if event.type == pygame.K_SPACE:
-            eng.rotate()
+        if event.type == pg.K_SPACE:
+            # eng.rotate()
+            pass
     keystate = pg.key.get_pressed()
     if keystate[pg.K_LEFT] and keystate[pg.K_RIGHT] and keystate[pg.K_UP] and keystate[pg.K_DOWN]:
         dir = (0, 0)

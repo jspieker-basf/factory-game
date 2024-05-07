@@ -9,14 +9,15 @@ class Entity(pg.sprite.Sprite):
                         ((1, 0), (120, 35), (1, 70)))
         # A reference to the original image to preserve the quality.
         self.orig_image = self.image
-        self.rect = self.image.get_rect(center=pos)
+        # self.rect = self.image.get_rect(center=pos)
         self.pos = Vector2(pos)  # The original center position/pivot point.
-        self.offset = Vector2(50, 0)  # We shift the sprite 50 px to the right.
-        self.walkingspeed = 2
+        # self.offset = Vector2(50, 0)  # We shift the sprite 50 px to the right.
+        self.walkingspeed = 5
         self.heading = 0
         self.scale = 1
         self.is_player = False
         self.world = None
+        self.id = id(self)
 
     def __repr__(self) -> str:
         return super().__repr__() + f" at {self.pos[0]}, {self.pos[1]}\n"
@@ -24,9 +25,20 @@ class Entity(pg.sprite.Sprite):
     def render(self, surface, camera_pos, screen_center, zoom_level):
         # Render the sprite with the camera offset.
         # camera_pos = screen_center
-        self.image = pg.transform.scale(self.orig_image, [self.orig_image.get_width() * 1 / zoom_level, self.orig_image.get_height() * 1 / zoom_level])
-
-        self.blit_x
+        size = surface.get_size()
+        tile_width = size[0] / zoom_level
+        if self.is_player:
+            self.image = pg.transform.scale(self.orig_image, [tile_width, tile_width * 3.459]) # fixed aspect ratio (512/148)
+            self.blit_x = screen_center[0] - self.image.get_width() // 2
+            self.blit_y = screen_center[1] - self.image.get_height() // 2
+            # print(f"{screen_center[0]} - {self.image.get_width() // 2} = {self.blit_x}")
+            # print(f"player at {self.blit_x}, {self.blit_y}")
+        else:
+            self.image = pg.transform.scale(self.orig_image, [tile_width, tile_width]) # fixed aspect ratio (512/148)
+            self.blit_x = (self.pos[0] - camera_pos[0]) * tile_width #- self.image.get_width() // 2
+            self.blit_y = size[1] - (self.pos[1] - camera_pos[1]) * tile_width #- self.image.get_height() // 2
+            # print(f"{self.pos[0]} / {zoom_level} - {camera_pos[0]} - {self.image.get_width() // 2} = {self.blit_x}")
+            # print(f"tile at {self.blit_x}, {self.blit_y}")
 
         self.rect = self.image.get_rect(center=(self.blit_x, self.blit_y))
 
@@ -40,7 +52,7 @@ class Engineer(Entity):
     def __init__(self, pos):
         super().__init__(pos)
         self.spritesheet = pg.image.load("engineer_spritesheet.tga")
-        self.image = self.spritesheet.subsurface((0, 0, 256, 512))
+        self.image = self.spritesheet.subsurface((0, 0, 148, 512))
         self.orig_image = self.image
         self.rect = self.image.get_rect(center=(self.image.get_width()//2, self.image.get_height() // 2))
         self.is_player = True
@@ -63,47 +75,42 @@ class Engineer(Entity):
             # ...#
             # ....
             ###print("heading 0", self.spritesheet.get_size())
-            self.image = self.spritesheet.subsurface((256*3, 0, 256, 512))
+            self.orig_image = self.spritesheet.subsurface((256*3, 0, 148, 512))
         elif heading == 45:
             # .#..
             # ....
             ###print("heading 45")
-            self.image = self.spritesheet.subsurface((256, 0, 256, 512))
+            self.orig_image = self.spritesheet.subsurface((256*2, 512, 148, 512))
         elif heading == 90:
             # #...
             # ....
             ###print("heading 90")
-            self.image = self.spritesheet.subsurface((0, 0, 256, 512))
+            self.orig_image = self.spritesheet.subsurface((0, 512, 148, 512))
         elif heading == 135:
             # ..#.
             # ....
             ###print("heading 135")
-            self.image = self.spritesheet.subsurface((256*2, 0, 256, 512))
+            self.orig_image = self.spritesheet.subsurface((256, 512, 148, 512))
         elif heading == 180:
             # ....
             # ...#
             ###print("heading 180")
-            self.image = self.spritesheet.subsurface((256*3, 512, 256, 512))
+            self.orig_image = self.spritesheet.subsurface((256*3, 512, 148, 512))
         elif heading == -135:
             # ....
             # .#..
             ###print("heading -135")
-            self.image = self.spritesheet.subsurface((256, 512, 256, 512))
+            self.orig_image = self.spritesheet.subsurface((256*2, 0, 148, 512))
         elif heading == -90:
             # ....
             # #...
             ###print("heading -90")
-            self.image = self.spritesheet.subsurface((0, 512, 256, 512))
+            self.orig_image = self.spritesheet.subsurface((0, 0, 148, 512))
         elif heading == -45:
             # ....
             # ..#.
             ###print("heading -45")
-            self.image = self.spritesheet.subsurface((256*2, 512, 256, 512))
-
-        image_size = self.image.get_size()
-        self.image = pg.transform.scale(self.image, (image_size[0] * self.scale, image_size[1] * self.scale))
-        # self.rotate() if self.heading != self.prev_heading else None
-        # ###print(f"Engineer moved {self.heading}° {direction}, now at ({self.pos.x}, {self.pos.y})")
+            self.orig_image = self.spritesheet.subsurface((256, 0, 148, 512))
 
 class Tile(Entity):
     def __init__(self, pos):
