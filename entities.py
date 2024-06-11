@@ -14,7 +14,7 @@ class Entity(pg.sprite.Sprite):
         # self.offset = Vector2(50, 0)  # We shift the sprite 50 px to the right.
         self.walkingspeed = 5
         self.heading = 0
-        self.scale = 1
+        self.scale = .3
         self.is_player = False
         self.world = None
         self.id = id(self)
@@ -22,9 +22,10 @@ class Entity(pg.sprite.Sprite):
     def __repr__(self) -> str:
         return super().__repr__() + f" at {self.pos[0]}, {self.pos[1]}\n"
 
-    def render(self, surface, camera_pos, screen_center, zoom_level):
+    def render(self, camera_pos, screen_center, zoom_level):
         # Render the sprite with the camera offset.
         # camera_pos = screen_center
+        surface = self.world.surface
         size = surface.get_size()
         tile_width = size[0] / zoom_level
         if self.is_player:
@@ -67,9 +68,9 @@ class Engineer(Entity):
         self.heading = heading
 
         #set relative position to players position
-        self.world.setRelativePosition(self.pos)
-
+        self.world.setRelativePosition(self.pos)                                        
         ###print(f'headed {heading}°, moving {direction}')
+        print(self.pos)
 
         if heading == 0:
             # ...#

@@ -81,7 +81,7 @@ while running:
 
     # Update the display
     clock.tick(60)
-    world.render(window)
+    world.render()
     pg.display.flip()
 
 # Quit the game
