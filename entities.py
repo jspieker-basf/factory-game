@@ -1,122 +1,179 @@
 import pygame as pg
-from pygame.math import Vector2
+import math
+
+class Message():
+    def __init__(self, content, expiration):
+        self.content = content
+        self.expiration = expiration
 
 class Entity(pg.sprite.Sprite):
-    def __init__(self, pos):
+    def __init__(self, posX, posY):
         super().__init__()
-        self.image = pg.Surface((122, 70), pg.SRCALPHA)
-        pg.draw.polygon(self.image, pg.Color('dodgerblue1'),
-                        ((1, 0), (120, 35), (1, 70)))
-        # A reference to the original image to preserve the quality.
-        self.orig_image = self.image
-        # self.rect = self.image.get_rect(center=pos)
-        self.pos = Vector2(pos)  # The original center position/pivot point.
-        # self.offset = Vector2(50, 0)  # We shift the sprite 50 px to the right.
-        self.walkingspeed = 5
-        self.heading = 0
-        self.scale = .3
-        self.is_player = False
+        self.posX = posX
+        self.posY = posY
         self.world = None
         self.id = id(self)
+        self.image = None
+        self.messages = []
 
     def __repr__(self) -> str:
-        return super().__repr__() + f" at {self.pos[0]}, {self.pos[1]}\n"
+        return super().__repr__() + f" ID: {self.id} at {self.posX}, {self.posY}"
+    
+    def set_message(self, message):
+        self.messages.insert(0, Message(message, self.world.time.get_ticks() + 2500))
 
-    def render(self, camera_pos, screen_center, zoom_level):
-        # Render the sprite with the camera offset.
-        # camera_pos = screen_center
-        surface = self.world.surface
-        size = surface.get_size()
-        tile_width = size[0] / zoom_level
-        if self.is_player:
-            self.image = pg.transform.scale(self.orig_image, [tile_width, tile_width * 3.459]) # fixed aspect ratio (512/148)
-            self.blit_x = screen_center[0] - self.image.get_width() // 2
-            self.blit_y = screen_center[1] - self.image.get_height() // 2
-            # print(f"{screen_center[0]} - {self.image.get_width() // 2} = {self.blit_x}")
-            # print(f"player at {self.blit_x}, {self.blit_y}")
+    def render_messages(self):
+        c_time = self.world.time.get_ticks()
+        offset = 1
+        self.messages = [message for message in self.messages if c_time < message.expiration]
+        for message in self.messages:
+            self.world.surface.blit(self.world.font.render(message.content, True, pg.Color('white')), (self.rect.left + 50 + 25 * offset, self.rect.top + 25 * -offset))
+            offset += 1
+
+    def render(self):
+        if self.world is None:
+            raise Exception("Entity is not in a world")
+        elif self.image is None:
+            raise Exception("Entity has no image")
         else:
-            self.image = pg.transform.scale(self.orig_image, [tile_width, tile_width]) # fixed aspect ratio (512/148)
-            self.blit_x = (self.pos[0] - camera_pos[0]) * tile_width #- self.image.get_width() // 2
-            self.blit_y = size[1] - (self.pos[1] - camera_pos[1]) * tile_width #- self.image.get_height() // 2
-            # print(f"{self.pos[0]} / {zoom_level} - {camera_pos[0]} - {self.image.get_width() // 2} = {self.blit_x}")
-            # print(f"tile at {self.blit_x}, {self.blit_y}")
-
-        self.rect = self.image.get_rect(center=(self.blit_x, self.blit_y))
-
-        surface.blit(self.image, (self.blit_x, self.blit_y))
-        if self.__repr__().startswith("<Tile"):
-            # ###print(f"etzadla wird {self} gerendert bei {self.blit_x}, {self.blit_y}")
-            pass
-        pass
+            if self.is_player:
+                self.image = pg.transform.scale(self.image, [self.world.tile_size, self.world.tile_size * 3.459]) # fixed aspect ratio (512/148)
+            else:
+                self.image = pg.transform.scale(self.image, [self.world.tile_size, self.world.tile_size])
+            centerX = self.world.surface.get_width() // 2
+            centerY = self.world.surface.get_height() // 2
+            blitX = centerX + self.posX * self.world.tile_size
+            blitY = centerY - self.posY * self.world.tile_size 
+            self.world.surface.blit(self.image, (blitX, blitY))
+            self.render_messages() if self.messages else None
+            self.rect = self.image.get_rect(top=blitY, left=blitX)
+            # print(self.rect, self.__repr__())
+            # print(self.ret)
 
 class Engineer(Entity):
-    def __init__(self, pos):
-        super().__init__(pos)
-        self.spritesheet = pg.image.load("engineer_spritesheet.tga")
-        self.image = self.spritesheet.subsurface((0, 0, 148, 512))
-        self.orig_image = self.image
-        self.rect = self.image.get_rect(center=(self.image.get_width()//2, self.image.get_height() // 2))
+    def __init__(self, posX, posY):
+        super().__init__(posX, posY)
+        self.spritesheet = pg.image.load("../factory-game/engineer_spritesheet.tga")
+        self.update_rotation(-90)
+        # self.rect = self.image.get_rect(center=(self.image.get_width()//2, self.image.get_height() // 2))
         self.is_player = True
+        self.inventory = []
 
+    def move(self):
+        keystate = pg.key.get_pressed()
+        if keystate[pg.K_LEFT] and keystate[pg.K_RIGHT] and keystate[pg.K_UP] and keystate[pg.K_DOWN]:
+            dir = (0, 0)
+        elif keystate[pg.K_LEFT] and keystate[pg.K_UP]:
+            dir = (-1, 1)
+        elif keystate[pg.K_LEFT] and keystate[pg.K_DOWN]:
+            dir = (-1, -1)
+        elif keystate[pg.K_RIGHT] and keystate[pg.K_UP]:
+            dir = (1, 1)
+        elif keystate[pg.K_RIGHT] and keystate[pg.K_DOWN]:
+            dir = (1, -1)
+        elif keystate[pg.K_LEFT] and keystate[pg.K_RIGHT]:
+            dir = (0, 0)
+        elif keystate[pg.K_UP] and keystate[pg.K_DOWN]:
+            dir = (0, 0)
+        elif keystate[pg.K_LEFT]:
+            dir = (-1, 0)
+        elif keystate[pg.K_RIGHT]:
+            dir = (1, 0)
+        elif keystate[pg.K_UP]:
+            dir = (0, 1)
+        elif keystate[pg.K_DOWN]:
+            dir = (0, -1)
+        else:
+            dir = (0, 0)
+        if dir != (0, 0):
+            heading = math.degrees(math.atan2(dir[1], dir[0]))
+            velocity = 2.5 / 60  # 5 tiles/second at 60 ticks
+            delta_x = velocity * math.cos(math.radians(heading))
+            delta_y = velocity * math.sin(math.radians(heading))
+            self.posX += delta_x
+            self.posY += delta_y
+            # print(self.posX, self.posY)
+            self.update_rotation(heading)
 
-    def move(self, direction: tuple[int, int], heading: int):
-
-        self.pos.x += direction[0] * self.walkingspeed / 10 * (0.7071 if direction[0] and direction[1] != 0 else 1) # 0.707 is the sin/cos of 45°
-        self.pos.y += direction[1] * self.walkingspeed / 10 * (0.7071 if direction[0] and direction[1] != 0 else 1) # 0.707 is the sin/cos of 45°
-        self.rect.center = self.pos
-        self.prev_heading = self.heading
-        self.heading = heading
-
-        #set relative position to players position
-        self.world.setRelativePosition(self.pos)                                        
-        ###print(f'headed {heading}°, moving {direction}')
-        print(self.pos)
-
+    def update_rotation(self, heading):
         if heading == 0:
             # ...#
             # ....
             ###print("heading 0", self.spritesheet.get_size())
-            self.orig_image = self.spritesheet.subsurface((256*3, 0, 148, 512))
+            self.image = self.spritesheet.subsurface((256*3, 0, 148, 512))
         elif heading == 45:
             # .#..
             # ....
             ###print("heading 45")
-            self.orig_image = self.spritesheet.subsurface((256*2, 512, 148, 512))
+            self.image = self.spritesheet.subsurface((256*2, 512, 148, 512))
         elif heading == 90:
             # #...
             # ....
             ###print("heading 90")
-            self.orig_image = self.spritesheet.subsurface((0, 512, 148, 512))
+            self.image = self.spritesheet.subsurface((0, 512, 148, 512))
         elif heading == 135:
             # ..#.
             # ....
             ###print("heading 135")
-            self.orig_image = self.spritesheet.subsurface((256, 512, 148, 512))
+            self.image = self.spritesheet.subsurface((256, 512, 148, 512))
         elif heading == 180:
             # ....
             # ...#
             ###print("heading 180")
-            self.orig_image = self.spritesheet.subsurface((256*3, 512, 148, 512))
+            self.image = self.spritesheet.subsurface((256*3, 512, 148, 512))
         elif heading == -135:
             # ....
             # .#..
             ###print("heading -135")
-            self.orig_image = self.spritesheet.subsurface((256*2, 0, 148, 512))
+            self.image = self.spritesheet.subsurface((256*2, 0, 148, 512))
         elif heading == -90:
             # ....
             # #...
             ###print("heading -90")
-            self.orig_image = self.spritesheet.subsurface((0, 0, 148, 512))
+            self.image = self.spritesheet.subsurface((0, 0, 148, 512))
         elif heading == -45:
             # ....
             # ..#.
             ###print("heading -45")
-            self.orig_image = self.spritesheet.subsurface((256, 0, 148, 512))
+            self.image = self.spritesheet.subsurface((256, 0, 148, 512))
 
 class Tile(Entity):
-    def __init__(self, pos):
-        super().__init__(pos)
-        self.image = pg.image.load("sand.jpg")
-        self.orig_image = self.image
-        self.rect = self.image.get_rect(center=pos)
+    def __init__(self, posX, posY):
+        super().__init__(posX, posY)
+        self.image = pg.image.load("../factory-game/sand.jpg")
+        self.is_player = False
+
+class Ore(Entity):
+    def __init__(self, posX, posY, quantity):
+        super().__init__(posX, posY)
+        self.image = pg.image.load("../factory-game/iron_ore.png")
+        self.is_player = False
+        self.quantity = quantity
+        self.item_name = None
+        self.destruct_time = None
+
+    def mine(self, miner):
+        self.quantity -= 1
+        miner.inventory.append((self.item_name, 1))
+        self.player.set_message(f"Collected 1 {self.item_name}")
+        if self.quantity == 0:
+            self.world.remove_entity(self) 
+
+class IronOre(Ore):
+    def __init__(self, posX, posY, quantity):
+        super().__init__(posX, posY, quantity)
+        self.image = pg.image.load("../factory-game/iron_ore.png")
+        self.item_name = "iron_ore"
+
+class CopperOre(Ore):
+    def __init__(self, posX, posY, quantity):
+        super().__init__(posX, posY, quantity)
+        self.image = pg.image.load("../factory-game/copper_ore.png")
+        self.item_name = "copper_ore"
+    
+
+class Cursor(Entity):
+    def __init__(self, posX, posY):
+        super().__init__(posX, posY)
+        self.image = pg.image.load("../factory-game/cursor.png")
         self.is_player = False

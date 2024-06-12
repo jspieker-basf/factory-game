@@ -1,17 +1,15 @@
 import pygame as pg
-
+from entities import *
 
 class World:
-    def __init__(self, name, surface) -> None:
+    def __init__(self, name, surface, time, font) -> None:
         self.name = name
         self.entities = []
-        self.surface = surface
         self.player = None
-        self.relative_position = (0, 0)
-        self.screen_center = (surface.get_width()//2, surface.get_height()//2)
-        self.zoom_level = 3 # 1 = 100% zoom, 20 = 5% zoom
-        self.tile_size = surface.get_width() // self.zoom_level
-        self.font = pg.freetype.Font(r"C:\Windows\Fonts\72-Monospace-Rg.ttf", 24)
+        self.surface = surface
+        self.tile_size = surface.get_width() // 20
+        self.time = time
+        self.font = font
 
     def add_entity(self, entity):
         self.entities.append(entity)
@@ -25,26 +23,43 @@ class World:
         if entity.is_player:
             self.player = None
 
-    def setRelativePosition(self, pos):
-        # camera position is the center of the screen
-        self.relative_position = (pos[0] / self.zoom_level, pos[1] / self.zoom_level)
-
-    def zoom(self, amount):
-        if self.zoom_level + amount >= 1 and self.zoom_level + amount <= 80: # min 5 max 80 (tiles from center visible)
-            self.zoom_level += amount
-
     def render(self):
         # Render the world
-        # w, h = surface.get_size()
-        # zoom_factor = (w/self.zoom_level, h/self.zoom_level)
         for entity in self.entities:
-            entity.render(self.relative_position, self.screen_center, self.zoom_level)
+            entity.render()
 
-        self.font.render_to(self.surface, (0, 0), f"pos x: {self.entities[0].pos[0]} | pos y: {self.entities[0].pos[1]}", pg.Color('white'))
+        # Render the grid
+        centerPosX = self.surface.get_width() // 2
+        centerPosY = self.surface.get_height() // 2
+        ts = self.tile_size
 
+        for x in range(centerPosX - ts * 15, centerPosX + ts * 15, ts):
+            col = 'red' if x == centerPosX else 'grey'
+            pg.draw.line(self.surface, pg.Color(col), (x, 0), (x, self.surface.get_height()))
+        for y in range(centerPosY - ts * 15, centerPosY + ts * 15, ts):
+            col = 'red' if y == centerPosY else 'grey'
+            pg.draw.line(self.surface, pg.Color(col), (0, y), (self.surface.get_width(), y))
 
-        # Render the UI
+    def cursor(self, clicked_sprites):
+        centerPosX = self.surface.get_width() // 2
+        centerPosY = self.surface.get_height() // 2
+        ts = self.tile_size
 
-    def abs_to_screen_pos(self,):
-        w, h = self.surface.get_size()
-        zoom_factor = (w/self.zoom_level, h/self.zoom_level)
+        # Render the cursor
+        x, y = pg.mouse.get_pos()
+        
+        #calculate world postion of cursor
+        cursorWorldPosX = (x - centerPosX) // ts
+        cursorWorldPosY = (centerPosY - y) // ts + 1
+        # print("selected tile:",cursorWorldPosX, cursorWorldPosY)
+        for entity in clicked_sprites:
+            print(entity.__repr__())
+            if isinstance(entity, Engineer):
+                entity.set_message(f"Selected tile: {cursorWorldPosX}, {cursorWorldPosY}")
+            if isinstance(entity, Ore):
+                entity.mine(self.player)
+            if entity.posX == cursorWorldPosX and entity.posY == cursorWorldPosY:
+                # print(entity.__repr__(),"at cursor position")
+                blitX = centerPosX + entity.posX * ts
+                blitY = centerPosY - entity.posY * ts 
+                self.surface.blit(pg.transform.scale(pg.image.load("../factory-game/cursor.png"),[ts, ts]), (blitX, blitY))
