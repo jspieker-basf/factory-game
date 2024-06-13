@@ -24,18 +24,27 @@ clock = time.Clock()
 
 # Set up world
 world = World("Nauvis", window, time, font)
-tiles = [world.add_entity(Tile(x, y)) for x in range(-10,10) for y in range(-10, 10)]
 
-copper_ore = CopperOre(0,2, 500)
-iron_ore = IronOre(5,-3, 800)
-eng = Engineer(0,0)
-world.add_entity(copper_ore)
-world.add_entity(iron_ore)
-world.add_entity(eng)
+tiles = [Tile(x, y) for x in range(-10,10) for y in range(-10, 10)]
+world.add_entities(tiles)
 
-def read_mousebutton_state():
-    left, middle, right = pg.mouse.get_pressed()
-    return left, middle, right
+copper_ores = [CopperOre(0, 2, 150), CopperOre(1, 2, 300), CopperOre(1, 3, 250)]
+iron_ores = [IronOre(5, -3, 200), IronOre(-3, 3, 200), IronOre(-3, 2, 200)]
+coal = [Coal(6, 4, 200), Coal(7, 4, 200), Coal(7, 5, 200), Coal(5, 4, 200)]
+world.add_entities(copper_ores)
+world.add_entities(iron_ores)
+world.add_entities(coal)
+
+trees = [Tree(3, 2), Tree(-6, 0)]
+world.add_entities(trees)
+
+oven = Oven(-2, 4)
+eng = Engineer(0, 0)
+world.add_entities([oven, eng])
+
+# def read_mousebutton_state():
+#     left, middle, right = pg.mouse.get_pressed()
+#     return left, middle, right
 
 # Game loop
 running = True
@@ -45,13 +54,16 @@ while running:
     for event in pg.event.get():
         if event.type == pg.QUIT:
             running = False
-        if event.type == pg.MOUSEBUTTONUP:
+        if event.type == pg.MOUSEBUTTONDOWN:
+            mouse_status = pg.mouse.get_pressed()
             pos = pg.mouse.get_pos()
             # get list of sprites that are under the mouse cursor
             clicked_sprites = [s for s in world.entities if s.rect.collidepoint(pos)]
-            world.cursor(clicked_sprites)
+            world.cursor(clicked_sprites, mouse_status)
+        if event.type == pg.KEYDOWN and event.key == pg.K_F1:
+            world.toggle_grid()
     eng.move()
-    print(read_mousebutton_state())
+    # print(read_mousebutton_state())
     # Update the display
     clock.tick(TICKRATE)
     world.render()
