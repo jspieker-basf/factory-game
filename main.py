@@ -1,7 +1,6 @@
 import pygame as pg
 from entities import *
 from world import World
-import math
 
 # Constants
 TICKRATE = 60
@@ -41,10 +40,6 @@ world.add_entities(trees)
 oven = Oven(-2, 4)
 eng = Engineer(0, 0)
 world.add_entities([oven, eng])
-
-# def read_mousebutton_state():
-#     left, middle, right = pg.mouse.get_pressed()
-#     return left, middle, right
 
 # Game loop
 running = True

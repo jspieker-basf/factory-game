@@ -2,7 +2,30 @@ import pygame as pg
 from entities import *
 
 class World:
+    """
+    Represents the game world.
+
+    Attributes:
+        name (str): The name of the world.
+        entities (list): A list of entities in the world.
+        player (Entity): The player entity.
+        surface (Surface): The surface to render the world on.
+        tile_size (int): The size of each tile in pixels.
+        time (int): The current time in the world.
+        font (Font): The font used for rendering text.
+        debug_grid (bool): Flag indicating whether to render the debug grid.
+    """
+
     def __init__(self, name, surface, time, font) -> None:
+        """
+        Initializes a new instance of the World class.
+
+        Args:
+            name (str): The name of the world.
+            surface (Surface): The surface to render the world on.
+            time (int): The current time in the world.
+            font (Font): The font used for rendering text.
+        """
         self.name = name
         self.entities = []
         self.player = None
@@ -13,12 +36,21 @@ class World:
         self.debug_grid = False
 
     def toggle_grid(self):
+        """
+        Toggles the debug grid on or off.
+        """
         if self.debug_grid:
             self.debug_grid = False
         else:
             self.debug_grid = True
 
     def add_entities(self, entities):
+        """
+        Adds entities to the world.
+
+        Args:
+            entities (list): A list of entities to add.
+        """
         for entity in entities:
             self.entities.append(entity)
             entity.world = self
@@ -26,12 +58,21 @@ class World:
                 self.player = entity
 
     def remove_entity(self, entity):
+        """
+        Removes an entity from the world.
+
+        Args:
+            entity (Entity): The entity to remove.
+        """
         entity.world = None
         self.entities.remove(entity)
         if entity.is_player:
             self.player = None
 
     def render(self):
+        """
+        Renders the world.
+        """
         # Render the world
         for entity in self.entities:
             entity.render()
@@ -77,6 +118,16 @@ class World:
 
 
     def cursor(self, clicked_sprites, mouse_status):
+        """
+        Handles cursor interaction.
+
+        Args:
+            clicked_sprites (list): A list of sprites that were clicked.
+            mouse_status (tuple): A tuple representing the state of the mouse buttons.
+
+        Returns:
+            None
+        """
         left, middle, right = mouse_status
         centerPosX = self.surface.get_width() // 2
         centerPosY = self.surface.get_height() // 2

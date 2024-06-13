@@ -2,16 +2,49 @@ import pygame as pg
 import math
 
 class Message():
+    """
+    Represents a message with content and expiration time.
+
+    Attributes:
+        content (str): The content of the message.
+        expiration (datetime): The expiration time of the message.
+    """
+
     def __init__(self, content, expiration):
         self.content = content
         self.expiration = expiration
 
 class Inventory():
+    """
+    Represents an inventory with a limited number of slots for storing items.
+
+    Attributes:
+        slots (list): A list of slots in the inventory, where each slot is represented as a list containing an item and its quantity.
+        max_slots (int): The maximum number of slots in the inventory.
+
+    Methods:
+        add_item(item, quantity): Adds an item to the inventory with the specified quantity.
+        remove_item(item, quantity): Removes an item from the inventory with the specified quantity.
+    """
+
     def __init__(self, max_slots):
         self.slots = []
         self.max_slots = max_slots
 
-    def add_item(self, item, quantity):
+    def add_item(self, item: object, quantity: int) -> None:
+        """
+        Adds an item to the inventory with the specified quantity.
+
+        Args:
+            item (Entity): The item to be added.
+            quantity (int): The quantity of the item to be added.
+
+        Raises:
+            Exception: If the inventory is full and there are no empty slots available.
+
+        Returns:
+            None
+        """
         for slot in self.slots:
             if slot[0].item_name == item.item_name and slot[1] < item.max_stack_size:
                 space_left = item.max_stack_size - slot[1]
@@ -36,8 +69,20 @@ class Inventory():
                 return
         raise Exception("Inventory is full")
 
+    def remove_item(self, item: object, quantity: int) -> None:
+        """
+        Removes an item from the inventory with the specified quantity.
 
-    def remove_item(self, item, quantity):
+        Args:
+            item (Entity): The item to be removed.
+            quantity (int): The quantity of the item to be removed.
+
+        Raises:
+            Exception: If the item is not found in the inventory.
+
+        Returns:
+            None
+        """
         for slot in self.slots:
             if slot[0] == item:
                 if slot[1] > quantity:
@@ -55,7 +100,22 @@ class Inventory():
         return iter(self.slots)
 
 class Entity(pg.sprite.Sprite):
-    def __init__(self, posX, posY):
+    """
+    Represents an entity in the game world.
+
+    Attributes:
+        posX (int): The X position of the entity.
+        posY (int): The Y position of the entity.
+        world (World): The world the entity belongs to.
+        id (int): The unique identifier of the entity.
+        image (Surface): The image of the entity.
+        icon (Surface): The icon of the entity.
+        messages (list): The list of messages associated with the entity.
+        size (tuple): The size of the entity.
+        max_stack_size (int): The maximum stack size of the entity.
+    """
+
+    def __init__(self, posX: float, posY: float) -> None:
         super().__init__()
         self.posX = posX
         self.posY = posY
@@ -70,10 +130,31 @@ class Entity(pg.sprite.Sprite):
     def __repr__(self) -> str:
         return super().__repr__() + f" ID: {self.id} at {self.posX}, {self.posY}"
 
-    def set_message(self, message):
+    def set_message(self, message: str) -> None:
+        """
+        Sets a new message for the entity.
+
+        Parameters:
+        - message (str): The message to be set.
+
+        Returns:
+        None
+        """
         self.messages.insert(0, Message(message, self.world.time.get_ticks() + 2500))
 
-    def render_messages(self):
+    def render_messages(self) -> None:
+        """
+        Renders the messages on the game surface.
+
+        This method iterates through the list of messages and renders each message on the game surface.
+        It also removes any expired messages from the list.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         c_time = self.world.time.get_ticks()
         offset = 1
         self.messages = [message for message in self.messages if c_time < message.expiration]
@@ -81,7 +162,20 @@ class Entity(pg.sprite.Sprite):
             self.world.surface.blit(self.world.font.render(message.content, True, pg.Color('white')), (self.rect.left + 50 + 25 * offset, self.rect.top + 25 * -offset))
             offset += 1
 
-    def render(self):
+    def render(self) -> None:
+        """
+        Renders the entity on the game surface.
+
+        Raises:
+            Exception: If the entity is not in a world or if it has no image.
+
+        Notes:
+            - If the entity is the player, the image is scaled to a fixed aspect ratio.
+            - If the entity is not the player, the image is scaled based on its size.
+            - The entity is blitted onto the game surface at the appropriate position.
+            - If the entity has any messages, they are rendered as well.
+            - The entity's rect attribute is updated to match the blitted position.
+        """
         if self.world is None:
             raise Exception("Entity is not in a world")
         elif self.image is None:
@@ -102,14 +196,39 @@ class Entity(pg.sprite.Sprite):
             # print(self.ret)
 
 class Engineer(Entity):
-    def __init__(self, posX, posY):
+    """
+    Represents an engineer entity in the game.
+
+    Attributes:
+    - posX (float): The x-coordinate of the engineer's position.
+    - posY (float): The y-coordinate of the engineer's position.
+    - spritesheet (Surface): The spritesheet image of the engineer.
+    - is_player (bool): Indicates whether the engineer is controlled by the player.
+    - inventory (Inventory): The inventory of the engineer.
+
+    Methods:
+    - __init__(self, posX: float, posY: float) -> None: Initializes a new instance of the Engineer class.
+    - move(self): Moves the engineer based on the user's input.
+    - update_rotation(self, heading): Updates the engineer's rotation based on the heading angle.
+    """
+
+    def __init__(self, posX: float, posY: float) -> None:
         super().__init__(posX, posY)
         self.spritesheet = pg.image.load("../factory-game/engineer_spritesheet.tga")
         self.update_rotation(-90)
         self.is_player = True
         self.inventory = Inventory(8)
 
-    def move(self):
+    def move(self) -> None:
+        """
+        Move the entity based on the keyboard input.
+
+        The entity's movement is determined by the keys pressed by the user.
+        The entity can move in eight directions: left, right, up, down, and the four diagonal directions.
+
+        Returns:
+            None
+        """
         keystate = pg.key.get_pressed()
         if keystate[pg.K_LEFT] and keystate[pg.K_RIGHT] and keystate[pg.K_UP] and keystate[pg.K_DOWN]:
             dir = (0, 0)
@@ -144,7 +263,16 @@ class Engineer(Entity):
             self.posY += delta_y
             self.update_rotation(heading)
 
-    def update_rotation(self, heading):
+    def update_rotation(self, heading: int) -> None:
+        """
+        Update the rotation of the entity based on the given heading.
+
+        Args:
+            heading (int): The heading angle in degrees.
+
+        Returns:
+            None
+        """
         if heading == 0:
             self.image = self.spritesheet.subsurface((256*3, 0, 148, 512))
         elif heading == 45:
@@ -163,20 +291,48 @@ class Engineer(Entity):
             self.image = self.spritesheet.subsurface((256, 0, 148, 512))
 
 class Tile(Entity):
-    def __init__(self, posX, posY):
+    """
+    Represents a tile in the game world.
+
+    Attributes:
+        posX (int): The x-coordinate of the tile's position.
+        posY (int): The y-coordinate of the tile's position.
+        image (Surface): The image of the tile.
+        is_player (bool): Indicates whether the tile is the player's tile.
+    """
+
+    def __init__(self, posX: float, posY: float) -> None:
         super().__init__(posX, posY)
         self.image = pg.image.load("../factory-game/sand.jpg")
         self.is_player = False
 
 class Depletable(Entity):
-    def __init__(self, posX, posY, quantity):
+    """
+    Represents a depletable entity in the game.
+
+    Attributes:
+        posX (int): The x-coordinate of the entity's position.
+        posY (int): The y-coordinate of the entity's position.
+        quantity (int): The initial quantity of the depletable entity.
+        image: The image representation of the entity.
+        is_player (bool): Indicates whether the entity is the player.
+        item_name: The name of the item associated with the entity.
+    """
+
+    def __init__(self, posX: float, posY: float, quantity: float) -> None:
         super().__init__(posX, posY)
         self.image = None
         self.is_player = False
         self.quantity = quantity
         self.item_name = None
 
-    def mine(self, miner):
+    def mine(self, miner: Engineer) -> None:
+        """
+        Mines the depletable entity.
+
+        Args:
+            miner: The miner entity that is mining the depletable entity.
+        """
         player_dist = pg.math.Vector2(self.posX, self.posY).distance_to((self.world.player.posX, self.world.player.posY))
         if player_dist < 5:
             self.quantity -= 1
@@ -186,7 +342,23 @@ class Depletable(Entity):
                 self.world.remove_entity(self)
 
 class Mineable(Entity):
-    def __init__(self, posX, posY):
+    """
+    Represents a mineable entity in the game.
+
+    Attributes:
+        posX (int): The x-coordinate of the entity's position.
+        posY (int): The y-coordinate of the entity's position.
+        image: The image associated with the entity.
+        is_player (bool): Indicates whether the entity is a player.
+        item_name: The name of the item that can be mined from the entity.
+        max_stack_size (int): The maximum stack size for the mined item.
+        quantity (int): The quantity of the mined item.
+
+    Methods:
+        mine(miner): Mines the entity and adds the mined item to the miner's inventory.
+    """
+
+    def __init__(self, posX: float, posY: float) -> None:
         super().__init__(posX, posY)
         self.image = None
         self.is_player = False
@@ -194,7 +366,16 @@ class Mineable(Entity):
         self.max_stack_size = 64
         self.quantity = 1
 
-    def mine(self, miner):
+    def mine(self, miner: Engineer) -> None:
+        """
+        Mines the entity and adds the mined item to the miner's inventory.
+
+        Args:
+            miner: The miner object that is mining the entity.
+
+        Returns:
+            None
+        """
         player_dist = pg.math.Vector2(self.posX, self.posY).distance_to((self.world.player.posX, self.world.player.posY))
         if player_dist < 5:
             miner.inventory.add_item(self, self.quantity)
@@ -202,25 +383,25 @@ class Mineable(Entity):
             self.world.remove_entity(self)
 
 class IronOre(Depletable):
-    def __init__(self, posX, posY, quantity):
+    def __init__(self, posX: float, posY: float, quantity: float) -> None:
         super().__init__(posX, posY, quantity)
         self.image = pg.image.load("../factory-game/iron_ore.png")
         self.item_name = "iron_ore"
 
 class CopperOre(Depletable):
-    def __init__(self, posX, posY, quantity):
+    def __init__(self, posX: float, posY: float, quantity: float) -> None:
         super().__init__(posX, posY, quantity)
         self.image = pg.image.load("../factory-game/copper_ore.png")
         self.item_name = "copper_ore"
 
 class Coal(Depletable):
-    def __init__(self, posX, posY, quantity):
+    def __init__(self, posX: float, posY: float, quantity: float) -> None:
         super().__init__(posX, posY, quantity)
         self.image = pg.image.load("../factory-game/coal.png")
         self.item_name = "coal"
 
 class Tree(Mineable):
-    def __init__(self, posX, posY):
+    def __init__(self, posX: float, posY: float) -> None:
         super().__init__(posX, posY)
         self.size = (4, 4)
         self.image = pg.image.load("../factory-game/tree.png")
@@ -230,13 +411,13 @@ class Tree(Mineable):
         self.quantity = 5
 
 class Cursor(Entity):
-    def __init__(self, posX, posY):
+    def __init__(self, posX: float, posY: float) -> None:
         super().__init__(posX, posY)
         self.image = pg.image.load("../factory-game/cursor.png")
         self.is_player = False
 
 class Oven(Mineable):
-    def __init__(self, posX, posY):
+    def __init__(self, posX: float, posY: float) -> None:
         super().__init__(posX, posY)
         self.size = (2, 2)
         self.image = pg.image.load("../factory-game/oven.png")
