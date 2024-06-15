@@ -1,6 +1,7 @@
 import pygame as pg
-from entities import *
 from world import World
+from entities import *
+from ui import *
 
 # Constants
 TICKRATE = 60
@@ -41,8 +42,12 @@ oven = Oven(-2, 4)
 eng = Engineer(0, 0)
 world.add_entities([oven, eng])
 
+# Set up UI
+world.init_ui()
+
 # Game loop
 running = True
+paused = False
 while running:
     window.fill((100,100,100))
     # Handle events
@@ -53,12 +58,20 @@ while running:
             mouse_status = pg.mouse.get_pressed()
             pos = pg.mouse.get_pos()
             # get list of sprites that are under the mouse cursor
-            clicked_sprites = [s for s in world.entities if s.rect.collidepoint(pos)]
+            try:
+                clicked_sprites = [s for s in world.entities if s.rect.collidepoint(pos)]
+            except AttributeError:
+                clicked_sprites = []
             world.cursor(clicked_sprites, mouse_status)
         if event.type == pg.KEYDOWN and event.key == pg.K_F1:
-            world.toggle_grid()
-    eng.move()
-    # print(read_mousebutton_state())
+            world.ui_grid.toggle()
+        if event.type == pg.KEYDOWN and event.key == pg.K_F2:
+            world.ui_inventory_bar.toggle()
+        # open menu if esc is pressed
+        if event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
+            world.ui_menu.toggle()
+    if world.player:
+        world.player.move()
     # Update the display
     clock.tick(TICKRATE)
     world.render()

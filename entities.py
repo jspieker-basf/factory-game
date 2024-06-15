@@ -99,6 +99,9 @@ class Inventory():
     def __iter__(self):
         return iter(self.slots)
 
+    def items(self):
+        return self.slots
+
 class Entity(pg.sprite.Sprite):
     """
     Represents an entity in the game world.
@@ -212,12 +215,15 @@ class Engineer(Entity):
     - update_rotation(self, heading): Updates the engineer's rotation based on the heading angle.
     """
 
-    def __init__(self, posX: float, posY: float) -> None:
+    def __init__(self, posX: float, posY: float, inventory: Inventory = None) -> None:
         super().__init__(posX, posY)
         self.spritesheet = pg.image.load("../factory-game/engineer_spritesheet.tga")
         self.update_rotation(-90)
         self.is_player = True
-        self.inventory = Inventory(8)
+        if inventory:
+            self.inventory = inventory
+        else:
+            self.inventory = Inventory(8)
 
     def move(self) -> None:
         """
