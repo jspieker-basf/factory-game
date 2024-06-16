@@ -4,6 +4,7 @@ import math
 class Message():
     """
     Represents a message with content and expiration time.
+    A message is displayed on the game surface fixed to an entitites position for a limited time.
 
     Attributes:
         content (str): The content of the message.
@@ -45,21 +46,29 @@ class Inventory():
         Returns:
             None
         """
+        # Iterate through the slots in the inventory
         for slot in self.slots:
+            # Check if the item in the slot matches the item to be added and there is space left in the slot
             if slot[0].item_name == item.item_name and slot[1] < item.max_stack_size:
                 space_left = item.max_stack_size - slot[1]
+                # If the quantity to be added is less than or equal to the space left in the slot, add the quantity to the slot
                 if quantity <= space_left:
                     slot[1] += quantity
                     return
                 else:
+                    # If the quantity to be added is more than the space left in the slot, fill the slot to its maximum capacity
                     slot[1] = item.max_stack_size
                     quantity -= space_left
+        # Calculate the number of empty slots in the inventory
         empty_slots = self.max_slots - len(self.slots)
+        # If there are empty slots in the inventory
         if empty_slots > 0:
+            # If the quantity to be added is less than or equal to the maximum stack size of the item, add the item to a new slot
             if quantity <= item.max_stack_size:
                 self.slots.append([item, quantity])
                 return
             else:
+                # If the quantity to be added is more than the maximum stack size of the item, add the item to multiple slots
                 num_stacks = quantity // item.max_stack_size
                 remainder = quantity % item.max_stack_size
                 for _ in range(num_stacks):
@@ -67,6 +76,7 @@ class Inventory():
                 if remainder > 0:
                     self.slots.append([item, remainder])
                 return
+        # If there are no empty slots in the inventory, raise an exception
         raise Exception("Inventory is full")
 
     def remove_item(self, item: object, quantity: int) -> None:
@@ -97,6 +107,10 @@ class Inventory():
         raise Exception("Item not found in inventory")
 
     def __iter__(self):
+        """
+        Returns an iterator for the slots in the entity.
+        """
+        # This function exists to allow iteration over the slots of the entity.
         return iter(self.slots)
 
     def items(self):
@@ -185,11 +199,20 @@ class Entity(pg.sprite.Sprite):
             raise Exception("Entity has no image")
         else:
             if self.is_player:
+                # the math behind this:
+                # 1. the aspect ratio of the image is 512/148
+                # 2. the aspect ratio of the screen is 16/9
+                # 3. the image is scaled to the height of the screen
+                # 4. the width of the image is calculated based on the aspect ratio
+                # 5. the image is centered on the screen
                 self.image = pg.transform.scale(self.image, [self.world.tile_size, self.world.tile_size * 3.459]) # fixed aspect ratio (512/148)
             else:
+                # and here:
+                # 1. the image is scaled based on the size of the entity
                 self.image = pg.transform.scale(self.image, [self.world.tile_size * self.size[0], self.world.tile_size * self.size[1]])
             centerX = self.world.surface.get_width() // 2
             centerY = self.world.surface.get_height() // 2
+            # blit is the term for drawing one image onto another
             blitX = centerX + self.posX * self.world.tile_size
             blitY = centerY - self.posY * self.world.tile_size
             self.world.surface.blit(self.image, (blitX, blitY))

@@ -175,11 +175,12 @@ class World:
         # helper function for loading the inventory
         def load_inventory() -> Inventory:
             try:
+                # Load player inventory by querying the database
                 self.db_cur.execute("SELECT * FROM player_inventory")
-                inventory = self.db_cur.fetchall()
+                inventory = self.db_cur.fetchall() # fetch all rows
                 print("loaded inventory:", inventory)
-                new_inventory = Inventory(8)
-                for item in inventory:
+                new_inventory = Inventory(8) # create a new inventory
+                for item in inventory: # iterate over the items in the inventory
                     if item[1] == "Oven":
                         new_inventory.add_item(Oven(0, 0), item[2])
                     elif item[1] == "CopperOre":
@@ -199,10 +200,13 @@ class World:
         # helper function for loading the entities
         def load_entities() -> None:
             self.entities = []
+            # iterate over the entities and create instances of the corresponding classes
             try:
+                # Load entities by querying the database
                 self.db_cur.execute("SELECT * FROM entities")
-                entities = self.db_cur.fetchall()
+                entities = self.db_cur.fetchall() # fetch all rows
                 entity_types = {}
+
                 for entity in entities:
                     if entity[1] not in entity_types:
                         entity_types[entity[1]] = 1
@@ -250,6 +254,7 @@ class World:
         self.ui_load_game_selection = Load_Game_Selection(self)
         self.ui_save_game_selection = Save_Game_Selection(self)
 
+        # Add UI elements to the list so that they can be called in the render method
         self.ui_elements = [self.ui_grid,
                             self.ui_inventory_bar,
                             self.ui_menu,
