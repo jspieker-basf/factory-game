@@ -388,13 +388,13 @@ class Mineable(Entity):
             self.world.player.set_message(f"Collected 1 {self.item_name}")
             self.world.remove_entity(self)
 
-class IronOre(Depletable):
+class Iron_Ore(Depletable):
     def __init__(self, posX: float, posY: float, quantity: float) -> None:
         super().__init__(posX, posY, quantity)
         self.image = pg.image.load("../factory-game/iron_ore.png")
         self.item_name = "iron_ore"
 
-class CopperOre(Depletable):
+class Copper_Ore(Depletable):
     def __init__(self, posX: float, posY: float, quantity: float) -> None:
         super().__init__(posX, posY, quantity)
         self.image = pg.image.load("../factory-game/copper_ore.png")

@@ -183,9 +183,9 @@ class World:
                     if item[1] == "Oven":
                         new_inventory.add_item(Oven(0, 0), item[2])
                     elif item[1] == "CopperOre":
-                        new_inventory.add_item(CopperOre(0, 0, 0), item[2])
+                        new_inventory.add_item(Copper_Ore(0, 0, 0), item[2])
                     elif item[1] == "IronOre":
-                        new_inventory.add_item(IronOre(0, 0, 0), item[2])
+                        new_inventory.add_item(Iron_Ore(0, 0, 0), item[2])
                     elif item[1] == "Coal":
                         new_inventory.add_item(Coal(0, 0, 0), item[2])
                     elif item[1] == "Tree":
@@ -215,9 +215,9 @@ class World:
                     elif entity[1] == "Oven":
                         self.add_entities([Oven(entity[2], entity[3])])
                     elif entity[1] == "CopperOre":
-                        self.add_entities([CopperOre(entity[2], entity[3], entity[4])])
+                        self.add_entities([Copper_Ore(entity[2], entity[3], entity[4])])
                     elif entity[1] == "IronOre":
-                        self.add_entities([IronOre(entity[2], entity[3], entity[4])])
+                        self.add_entities([Iron_Ore(entity[2], entity[3], entity[4])])
                     elif entity[1] == "Coal":
                         self.add_entities([Coal(entity[2], entity[3], entity[4])])
                     elif entity[1] == "Tree":
@@ -245,10 +245,10 @@ class World:
         Initializes the UI elements.
         """
         self.ui_grid = Grid(self)
-        self.ui_inventory_bar = InventoryBar(self)
-        self.ui_menu = SimpleMenu(self)
-        self.ui_load_game_selection = LoadGameSelection(self)
-        self.ui_save_game_selection = SaveGameSelection(self)
+        self.ui_inventory_bar = Inventory_Bar(self)
+        self.ui_menu = Simple_Menu(self)
+        self.ui_load_game_selection = Load_Game_Selection(self)
+        self.ui_save_game_selection = Save_Game_Selection(self)
 
         self.ui_elements = [self.ui_grid,
                             self.ui_inventory_bar,

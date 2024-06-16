@@ -1,9 +1,8 @@
 import pygame as pg
 from entities import *
 import os
-from time import time
 
-class UIElement():
+class UI_Element():
     def __init__(self, world):
         self.world = world
 
@@ -16,7 +15,7 @@ class UIElement():
         else:
             self.visible = True
 
-class Grid(UIElement):
+class Grid(UI_Element):
     def __init__(self, world):
         super().__init__(world)
         self.visible = False
@@ -35,7 +34,7 @@ class Grid(UIElement):
                 col = 'red' if y == centerPosY else 'yellow'
                 pg.draw.line(self.world.surface, pg.Color(col), (0, y), (self.world.surface.get_width(), y))
 
-class InventoryBar(UIElement):
+class Inventory_Bar(UI_Element):
     def __init__(self, world):
         super().__init__(world)
         self.visible = True
@@ -68,10 +67,10 @@ class InventoryBar(UIElement):
                 self.world.surface.blit(self.world.font.render(str(item[1]), True, pg.Color('white'), pg.Color('black')), (slot_rect.x + 10, slot_rect.y + 10))
                 i += 1
 
-class SimpleMenu(UIElement):
+class Simple_Menu(UI_Element):
     def __init__(self, world):
         super().__init__(world)
-        self.visible = False
+        self.visible = True
 
     def render(self):
         if self.visible:
@@ -117,7 +116,7 @@ class SimpleMenu(UIElement):
                     self.visible = False
                     self.world.quit_game()
 
-class LoadGameSelection(UIElement):
+class Load_Game_Selection(UI_Element):
     def __init__(self, world):
         super().__init__(world)
         self.visible = False
@@ -179,7 +178,7 @@ class LoadGameSelection(UIElement):
 
         return savegame_files
 
-class SaveGameSelection(UIElement):
+class Save_Game_Selection(UI_Element):
     def __init__(self, world):
         super().__init__(world)
         self.visible = False

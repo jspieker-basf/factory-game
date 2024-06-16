@@ -25,22 +25,22 @@ clock = time.Clock()
 # Set up world
 world = World("Nauvis", window, time, font)
 
-tiles = [Tile(x, y) for x in range(-10,10) for y in range(-10, 10)]
-world.add_entities(tiles)
+# tiles = [Tile(x, y) for x in range(-10,10) for y in range(-10, 10)]
+# world.add_entities(tiles)
 
-copper_ores = [CopperOre(0, 2, 150), CopperOre(1, 2, 300), CopperOre(1, 3, 250)]
-iron_ores = [IronOre(5, -3, 200), IronOre(-3, 3, 200), IronOre(-3, 2, 200)]
-coal = [Coal(6, 4, 200), Coal(7, 4, 200), Coal(7, 5, 200), Coal(5, 4, 200)]
-world.add_entities(copper_ores)
-world.add_entities(iron_ores)
-world.add_entities(coal)
+# copper_ores = [CopperOre(0, 2, 150), CopperOre(1, 2, 300), CopperOre(1, 3, 250)]
+# iron_ores = [IronOre(5, -3, 200), IronOre(-3, 3, 200), IronOre(-3, 2, 200)]
+# coal = [Coal(6, 4, 200), Coal(7, 4, 200), Coal(7, 5, 200), Coal(5, 4, 200)]
+# world.add_entities(copper_ores)
+# world.add_entities(iron_ores)
+# world.add_entities(coal)
 
-trees = [Tree(3, 2), Tree(-6, 0)]
-world.add_entities(trees)
+# trees = [Tree(3, 2), Tree(-6, 0)]
+# world.add_entities(trees)
 
-oven = Oven(-2, 4)
-eng = Engineer(0, 0)
-world.add_entities([oven, eng])
+# oven = Oven(-2, 4)
+# eng = Engineer(0, 0)
+# world.add_entities([oven, eng])
 
 # Set up UI
 world.init_ui()
